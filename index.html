@@ -1,0 +1,2240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AttentionAid — Gain Back Your Attention</title>
+
+  <!-- ═══════════════════════════════════════════
+       FONTS
+       Fraunces  → display / headline serif
+       Caveat    → handwritten doodle labels
+       DM Sans   → body copy
+  ════════════════════════════════════════════ -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;1,9..144,300;1,9..144,700&family=Caveat:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+  <style>
+
+    /* ═══════════════════════════════════════════
+       RESET & BOX MODEL
+    ════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ═══════════════════════════════════════════
+       DESIGN TOKENS — edit these to retheme the site
+    ════════════════════════════════════════════ */
+    :root {
+      --brown:      #6b250d;
+      --brown-dark: #4a1808;
+      --cream:      #f5e9d0;
+      --amber:      #d4843b;
+      --warm:       #e8c47a;
+      /* Fluid horizontal padding */
+      --px: clamp(1.25rem, 5vw, 4rem);
+    }
+
+    /* ═══════════════════════════════════════════
+       BASE
+    ════════════════════════════════════════════ */
+    html { scroll-behavior: smooth; }
+
+    body {
+      background-color: var(--brown);
+      color: var(--cream);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    @media (hover: none) { body { cursor: auto; } }
+
+    /* ═══════════════════════════════════════════
+       GRAIN TEXTURE — CSS static layer
+       Opacity 0.245 = 70% of original 0.35
+    ════════════════════════════════════════════ */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      background-size: 200px 200px;
+      pointer-events: none;
+      z-index: 1000;
+      opacity: 0.245;
+    }
+
+    /* ═══════════════════════════════════════════
+       CUSTOM CURSOR (desktop/pointer only)
+    ════════════════════════════════════════════ */
+    .cursor {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      mix-blend-mode: difference;
+    }
+    .cursor-dot {
+      width: 8px; height: 8px;
+      background: var(--cream);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .cursor-ring {
+      width: 32px; height: 32px;
+      border: 1.5px solid var(--cream);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: width 0.2s, height 0.2s;
+    }
+    body:has(a:hover) .cursor-ring,
+    body:has(button:hover) .cursor-ring { width: 48px; height: 48px; }
+
+    @media (hover: none) { .cursor { display: none; } }
+
+
+    /* ═══════════════════════════════════════════
+       NAVIGATION
+    ════════════════════════════════════════════ */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 1.3rem var(--px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(107, 37, 13, 0.75);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+    nav::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: var(--px); right: var(--px);
+      height: 1px;
+      background: rgba(245, 233, 208, 0.12);
+    }
+    .nav-logo {
+      font-family: 'Fraunces', serif;
+      font-size: 1.05rem; font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--cream); text-decoration: none;
+      flex-shrink: 0;
+    }
+    .nav-logo span { color: var(--amber); }
+    .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+    .nav-links a {
+      font-size: 0.78rem; font-weight: 400;
+      letter-spacing: 0.09em; text-transform: uppercase;
+      color: rgba(245, 233, 208, 0.6); text-decoration: none;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--cream); }
+
+    /* Hamburger (mobile) */
+    .nav-hamburger {
+      display: none; flex-direction: column; gap: 5px;
+      background: none; border: none; cursor: pointer; padding: 4px;
+    }
+    .nav-hamburger span {
+      display: block; width: 22px; height: 1.5px;
+      background: var(--cream); border-radius: 2px;
+      transition: transform 0.3s, opacity 0.3s;
+    }
+
+    /* Mobile drawer */
+    .nav-drawer {
+      display: none;
+      position: fixed; top: 56px; left: 0; right: 0;
+      background: rgba(74, 24, 8, 0.97);
+      backdrop-filter: blur(16px);
+      padding: 1.5rem var(--px);
+      z-index: 99;
+      border-bottom: 1px solid rgba(245, 233, 208, 0.1);
+    }
+    .nav-drawer.open { display: block; }
+    .nav-drawer ul { list-style: none; display: flex; flex-direction: column; gap: 1.2rem; }
+    .nav-drawer a {
+      font-size: 1rem; letter-spacing: 0.06em; text-transform: uppercase;
+      color: rgba(245, 233, 208, 0.75); text-decoration: none;
+    }
+
+
+    /* ═══════════════════════════════════════════
+       HERO SECTION
+    ════════════════════════════════════════════ */
+    #hero {
+      min-height: 100svh;
+      display: flex;
+      align-items: center;
+      padding: 6rem var(--px) 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      /* On mobile: full width. On desktop: leave room for eye */
+      max-width: 580px;
+    }
+
+    .hero-tag {
+      font-family: 'Caveat', cursive;
+      font-size: 1.05rem; color: var(--amber);
+      margin-bottom: 1rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .hero-tag::before {
+      content: ''; display: inline-block;
+      width: 2rem; height: 1px;
+      background: var(--amber); flex-shrink: 0;
+    }
+
+    h1 {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(2.8rem, 7vw, 6.5rem);
+      font-weight: 700; line-height: 1.0;
+      letter-spacing: -0.03em; color: var(--cream);
+    }
+    h1 em { font-style: italic; font-weight: 300; color: var(--warm); }
+
+    .doodle-underline { position: relative; display: inline-block; }
+    .doodle-underline svg {
+      position: absolute; bottom: -16px; left: -4px;
+      width: calc(100% + 8px);
+      overflow: visible; pointer-events: none;
+    }
+
+    .hero-sub {
+      margin-top: 2rem;
+      font-size: clamp(0.93rem, 2vw, 1.05rem);
+      line-height: 1.75;
+      color: rgba(245, 233, 208, 0.68);
+      max-width: 400px;
+    }
+
+    .hero-cta {
+      margin-top: 2.5rem;
+      display: inline-flex; align-items: center; gap: 0.75rem;
+      background: var(--cream); color: var(--brown);
+      font-family: 'DM Sans', sans-serif; font-weight: 500;
+      font-size: 0.88rem; letter-spacing: 0.04em;
+      padding: 0.85rem 1.8rem; border: none; border-radius: 100px;
+      cursor: none; text-decoration: none;
+      transition: background 0.2s, transform 0.2s;
+      white-space: nowrap;
+    }
+    .hero-cta:hover { background: var(--warm); transform: translateY(-2px); }
+    .hero-cta svg { transition: transform 0.2s; flex-shrink: 0; }
+    .hero-cta:hover svg { transform: translateX(4px); }
+    @media (hover: none) { .hero-cta { cursor: pointer; } }
+
+    /* Background squiggles */
+    .squiggles { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+    .squiggles svg { position: absolute; opacity: 0.06; }
+
+    /* ─────────────────────────────────────────────
+       DOODLE EYE — visible on ALL screen sizes
+       On mobile it sits below the text (stacked).
+       On tablet+ it floats to the right absolutely.
+    ───────────────────────────────────────────── */
+    .hero-eye {
+      pointer-events: none;
+      animation: floatEye 5s ease-in-out infinite;
+    }
+
+    /* Mobile: centered block below headline text */
+    @media (max-width: 768px) {
+      #hero {
+        flex-direction: column;
+        align-items: flex-start;
+        padding-bottom: 5rem;
+        gap: 2rem;
+      }
+      .hero-content { max-width: 100%; }
+      .hero-eye {
+        position: relative;
+        width: clamp(160px, 55vw, 260px);
+        align-self: center;
+        top: auto; right: auto;
+        transform: none !important;
+        animation: floatEyeMobile 5s ease-in-out infinite;
+      }
+    }
+
+    /* Tablet landscape: smaller, side-by-side */
+    @media (min-width: 769px) and (max-width: 900px) {
+      .hero-eye {
+        position: absolute;
+        right: 2%; top: 50%;
+        width: 200px;
+        transform: translateY(-50%);
+      }
+      .hero-content { max-width: 55%; }
+    }
+
+    /* Desktop: full size, absolute right */
+    @media (min-width: 901px) {
+      .hero-eye {
+        position: absolute;
+        right: clamp(2%, 6%, 8%);
+        top: 50%;
+        width: clamp(180px, 26vw, 360px);
+        transform: translateY(-50%);
+      }
+      .hero-content { max-width: 580px; }
+    }
+
+    @keyframes floatEye {
+      0%, 100% { transform: translateY(-50%) rotate(-2deg); }
+      50%       { transform: translateY(calc(-50% - 12px)) rotate(2deg); }
+    }
+    @keyframes floatEyeMobile {
+      0%, 100% { transform: translateY(0) rotate(-2deg); }
+      50%       { transform: translateY(-8px) rotate(2deg); }
+    }
+
+    .eye-pupil { animation: lookAround 4s ease-in-out infinite; }
+    @keyframes lookAround {
+      0%  { transform: translate(0,0); }
+      20% { transform: translate(6px,-4px); }
+      50% { transform: translate(-5px,3px); }
+      80% { transform: translate(3px,5px); }
+      100%{ transform: translate(0,0); }
+    }
+
+    /* Scroll hint */
+    .scroll-hint {
+      position: absolute;
+      bottom: 2rem; left: 50%;
+      transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: 0.4rem;
+      font-family: 'Caveat', cursive; font-size: 0.85rem;
+      color: rgba(245, 233, 208, 0.35);
+      animation: bounceY 2s ease-in-out infinite;
+      white-space: nowrap;
+    }
+    @keyframes bounceY {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50%       { transform: translateX(-50%) translateY(6px); }
+    }
+
+
+    /* ═══════════════════════════════════════════
+       WAVY DIVIDERS
+    ════════════════════════════════════════════ */
+    .wavy-divider { display: block; width: 100%; height: 50px; margin-top: -1px; }
+
+
+    /* ═══════════════════════════════════════════
+       SHARED SECTION STYLES
+    ════════════════════════════════════════════ */
+    section { position: relative; padding: clamp(3rem, 7vw, 6rem) var(--px); }
+
+    .section-label {
+      font-family: 'Caveat', cursive; font-size: 1rem;
+      color: var(--amber); margin-bottom: 0.6rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .section-label::before {
+      content: ''; display: inline-block;
+      width: 1.5rem; height: 1px;
+      background: var(--amber); flex-shrink: 0;
+    }
+
+    h2 {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(2rem, 4.5vw, 3.4rem); font-weight: 700;
+      letter-spacing: -0.02em; color: var(--cream);
+      line-height: 1.1; margin-bottom: 0.8rem;
+    }
+    h2 em { font-style: italic; font-weight: 300; color: var(--warm); }
+
+
+    /* ═══════════════════════════════════════════
+       GUIDE SECTION
+    ════════════════════════════════════════════ */
+    #guide { background: rgba(0, 0, 0, 0.18); }
+
+    .guide-header { display: flex; align-items: flex-end; gap: 2rem; margin-bottom: 3rem; flex-wrap: wrap; }
+    .guide-header-text { flex: 1 1 300px; }
+    .guide-header-text p {
+      margin-top: 0.7rem;
+      color: rgba(245, 233, 208, 0.6); max-width: 440px;
+      line-height: 1.7; font-size: 0.97rem;
+    }
+    .guide-doodle-text {
+      font-family: 'Caveat', cursive; font-size: 1.2rem;
+      color: rgba(245, 233, 208, 0.35);
+      transform: rotate(-3deg); max-width: 160px; line-height: 1.4; flex-shrink: 0;
+    }
+
+    /* Tab container card */
+    .tabs-container {
+      background: rgba(245, 233, 208, 0.03);
+      border: 1px solid rgba(245, 233, 208, 0.09);
+      border-radius: 20px; overflow: hidden;
+    }
+
+    /* Tab button row — scrollable on small screens */
+    .tab-nav {
+      display: flex;
+      border-bottom: 1px solid rgba(245, 233, 208, 0.09);
+      padding: 0 1.25rem;
+      overflow-x: auto; scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .tab-nav::-webkit-scrollbar { display: none; }
+
+    .tab-btn {
+      flex-shrink: 0;
+      background: none; border: none;
+      padding: 1.1rem 1.6rem;
+      font-family: 'DM Sans', sans-serif; font-size: 0.82rem;
+      font-weight: 400; letter-spacing: 0.07em; text-transform: uppercase;
+      color: rgba(245, 233, 208, 0.4); cursor: pointer;
+      position: relative; transition: color 0.25s;
+      display: flex; align-items: center; gap: 0.55rem; white-space: nowrap;
+    }
+    .tab-btn::after {
+      content: ''; position: absolute; bottom: -1px; left: 0; right: 0;
+      height: 2px; background: var(--amber);
+      transform: scaleX(0); transition: transform 0.3s ease;
+    }
+    .tab-btn.active        { color: var(--cream); }
+    .tab-btn.active::after { transform: scaleX(1); }
+    .tab-btn:hover         { color: rgba(245, 233, 208, 0.75); }
+
+    .tab-panel { display: none; padding: clamp(1.25rem, 4vw, 2.5rem); }
+    .tab-panel.active { display: block; animation: fadeUp 0.35s ease; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .panel-intro {
+      display: flex; align-items: center; gap: 1rem;
+      margin-bottom: 1.4rem; flex-wrap: wrap;
+    }
+    .platform-badge {
+      display: inline-flex; align-items: center; gap: 0.45rem;
+      background: rgba(212, 132, 59, 0.14);
+      border: 1px solid rgba(212, 132, 59, 0.28);
+      padding: 0.35rem 0.9rem; border-radius: 100px;
+      font-size: 0.78rem; font-weight: 500; color: var(--amber);
+      letter-spacing: 0.04em; white-space: nowrap;
+    }
+    .panel-note {
+      font-family: 'Caveat', cursive; font-size: 1rem;
+      color: rgba(245, 233, 208, 0.4);
+    }
+
+    /* ─────────────────────────────────────────────
+       STEP CARDS — updated layout with image slot
+       Each card has: number / title / description /
+       optional screenshot image.
+    ───────────────────────────────────────────── */
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 1.25rem; margin-top: 1.25rem;
+    }
+
+    .step-card {
+      background: rgba(245, 233, 208, 0.04);
+      border: 1px solid rgba(245, 233, 208, 0.08);
+      border-radius: 14px; overflow: hidden;
+      transition: background 0.2s, transform 0.25s;
+      display: flex; flex-direction: column;
+    }
+    .step-card:hover { background: rgba(245, 233, 208, 0.08); transform: translateY(-3px); }
+
+    /* ── Step card image area ──
+       Supports screenshots (JPG/PNG) and animated GIFs.
+       GIFs get full height auto-sizing for demos. */
+    .step-img-wrap {
+      width: 100%; overflow: hidden;
+      background: rgba(245, 233, 208, 0.04);
+      border-bottom: 1px solid rgba(245, 233, 208, 0.06);
+      display: none; /* hidden until an image is provided */
+    }
+    .step-img-wrap.has-image { display: block; }
+    .step-img-wrap img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      object-position: top;
+      display: block;
+      transition: transform 0.4s ease;
+    }
+    /* GIF images: auto-height for full demo visibility */
+    .step-img-wrap img[src$=".gif"],
+    .step-img-wrap img[src*=".gif?"] {
+      height: auto;
+      max-height: 400px;
+      object-fit: contain;
+      background: rgba(0, 0, 0, 0.15);
+    }
+    .step-card:hover .step-img-wrap img { transform: scale(1.03); }
+
+    /* Step text area */
+    .step-body { padding: 1.4rem; flex: 1; }
+
+    .step-num {
+      font-family: 'Fraunces', serif; font-size: 2rem;
+      font-weight: 700; color: rgba(212, 132, 59, 0.22);
+      line-height: 1; margin-bottom: 0.6rem;
+    }
+    .step-card h3 {
+      font-family: 'DM Sans', sans-serif; font-size: 0.92rem;
+      font-weight: 500; color: var(--cream); margin-bottom: 0.45rem;
+    }
+    .step-card p {
+      font-size: 0.85rem; line-height: 1.65;
+      color: rgba(245, 233, 208, 0.58);
+    }
+    .step-card a { color: var(--amber); text-decoration: underline; text-underline-offset: 3px; }
+    .step-card code {
+      background: rgba(245, 233, 208, 0.1); padding: 2px 5px;
+      border-radius: 4px; font-size: 0.8em; word-break: break-all;
+    }
+
+    /* ── Code container (multi-line code blocks) ── */
+    .code-container-wrap {
+      position: relative;
+      margin: 0.8rem 0;
+    }
+    .code-container {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(245, 233, 208, 0.12);
+      border-radius: 8px;
+      padding: 1rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.8rem;
+      line-height: 1.5;
+      color: #e8c47a;
+      overflow-x: auto;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      /* Hide scrollbars */
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none; /* IE/Edge */
+    }
+    .code-container::-webkit-scrollbar {
+      display: none; /* Chrome/Safari/Opera */
+    }
+    .code-container code {
+      background: none;
+      padding: 0;
+      color: inherit;
+    }
+    /* Copy button for code containers */
+    .copy-code-btn {
+      position: absolute;
+      top: 0.6rem;
+      right: 0.6rem;
+      background: rgba(212, 132, 59, 0.9);
+      color: var(--brown);
+      border: none;
+      border-radius: 6px;
+      padding: 0.4rem 0.8rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+      transition: all 0.2s;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .copy-code-btn:hover {
+      background: var(--amber);
+      transform: translateY(-1px);
+    }
+    .copy-code-btn.copied {
+      background: #4CD964;
+      color: white;
+    }
+    .copy-code-btn svg {
+      width: 12px;
+      height: 12px;
+    }
+    @media (hover: none) { .copy-code-btn { cursor: pointer; } }
+
+    /* ── Exclamation icon / alert box ── */
+    .step-alert {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+      background: rgba(212, 132, 59, 0.08);
+      border-left: 3px solid var(--amber);
+      padding: 0.8rem;
+      border-radius: 6px;
+      margin: 0.8rem 0;
+      font-size: 0.83rem;
+      line-height: 1.6;
+      color: rgba(245, 233, 208, 0.75);
+    }
+    .step-alert-icon {
+      flex-shrink: 0;
+      color: var(--amber);
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    /* ── App thumbnail images (small inline icons) ── */
+    .app-thumb {
+      display: inline-block;
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      object-fit: cover;
+      vertical-align: middle;
+      margin-right: 0.4rem;
+      border: 1px solid rgba(245, 233, 208, 0.15);
+    }
+
+    /* ── App icon in step card (larger, hero image) ── */
+    .app-icon-hero {
+      width: 80px !important;
+      height: 80px !important;
+      border-radius: 18px;
+      object-fit: cover;
+      display: block;
+      margin: 0 auto;
+      border: 1px solid rgba(245, 233, 208, 0.2);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+
+    /* Override step-img-wrap for app icons specifically */
+    .step-img-wrap.app-icon-wrap {
+      background: transparent;
+      border: none;
+      padding: 1.2rem 0 0.8rem;
+    }
+    .step-img-wrap.app-icon-wrap img {
+      height: auto;
+    }
+
+    /* ── Manual installation horizontal layout ── */
+    .manual-install-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+      margin-top: 1.5rem;
+    }
+    .manual-install-grid .step-card {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    .manual-install-grid .step-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    /* Constrain code container in manual installation */
+    .manual-install-grid .code-container-wrap {
+      margin-top: auto;
+    }
+    .manual-install-grid .code-container {
+      max-height: 200px;
+      overflow-y: auto;
+      font-size: 0.7rem;
+    }
+    @media (max-width: 1024px) {
+      .manual-install-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ── Enable extension image full visibility ── */
+    .step-img-wrap.full-height img {
+      height: auto;
+      max-height: none;
+      object-fit: contain;
+    }
+
+    /* ── Install button (call-to-action style) ── */
+    .install-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #f5e9d0;  /* Cream - high contrast against brown background */
+      color: #2a0f05;  /* Very dark brown for text */
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      font-size: 0.85rem;
+      letter-spacing: 0.03em;
+      padding: 0.65rem 1.4rem;
+      border-radius: 100px;
+      text-decoration: none;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: 2px solid transparent;
+      margin-top: 0.6rem;
+    }
+    .install-btn:hover {
+      background: var(--amber);  /* Amber on hover */
+      color: #1a0805;  /* Even darker text on hover */
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(245, 233, 208, 0.4);
+    }
+    .install-btn svg {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+      fill: currentColor;
+    }
+    @media (hover: none) { .install-btn { cursor: pointer; } }
+
+    /* ── GIF Play Button Overlay ── */
+    .gif-play-overlay {
+      position: relative;
+      cursor: pointer;
+      min-height: 400px; /* Ensure proper height before GIF loads */
+    }
+    .gif-play-overlay::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(2px);
+      z-index: 2;
+      transition: opacity 0.3s;
+    }
+    .gif-play-overlay.playing::before {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .gif-play-overlay img {
+      min-height: 400px;
+      object-fit: contain;
+    }
+    .gif-play-btn {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 64px;
+      height: 64px;
+      background: rgba(212, 132, 59, 0.95);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 3;
+      transition: all 0.3s;
+    }
+    .gif-play-overlay:hover .gif-play-btn {
+      background: var(--amber);
+      transform: translate(-50%, -50%) scale(1.1);
+    }
+    .gif-play-overlay.playing .gif-play-btn {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .gif-play-btn svg {
+      width: 28px;
+      height: 28px;
+      fill: var(--brown);
+      margin-left: 4px;
+    }
+
+    /* ── Script download link ── */
+    .script-download-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--amber);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.88rem;
+      padding: 0.3rem 0;
+      transition: color 0.2s;
+    }
+    .script-download-link:hover { color: var(--warm); }
+    .script-download-link svg { width: 16px; height: 16px; }
+
+    /* ── Legal disclaimer (greyed out italic text) ── */
+    .legal-disclaimer {
+      margin-top: 1.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(245, 233, 208, 0.08);
+      font-style: italic;
+      font-size: 0.78rem;
+      color: rgba(245, 233, 208, 0.35);
+      line-height: 1.6;
+    }
+
+
+    /* ═══════════════════════════════════════════
+       THE ALTERNATIVE SECTION
+    ════════════════════════════════════════════ */
+    #alternative {
+      padding: 5rem 0;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .alternative-intro {
+      text-align: center;
+      max-width: 700px;
+      margin: 0 auto 3rem;
+    }
+    .alternative-intro p {
+      font-size: 1.05rem;
+      line-height: 1.8;
+      color: rgba(245, 233, 208, 0.7);
+      margin-top: 1rem;
+    }
+    .apps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      margin-top: 3rem;
+    }
+    .app-card {
+      background: rgba(0, 0, 0, 0.15);
+      border: 1px solid rgba(245, 233, 208, 0.1);
+      border-radius: 12px;
+      padding: 2rem;
+      transition: all 0.3s;
+      position: relative;
+    }
+    .app-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(245, 233, 208, 0.25);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+    .app-card-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.2rem;
+    }
+    .app-icon-large {
+      width: 60px;
+      height: 60px;
+      border-radius: 14px;
+      object-fit: cover;
+      border: 1px solid rgba(245, 233, 208, 0.15);
+      flex-shrink: 0;
+    }
+    .app-title {
+      font-family: 'Fraunces', serif;
+      font-size: 1.4rem;
+      color: var(--cream);
+      margin: 0;
+      line-height: 1.2;
+    }
+    .app-tagline {
+      font-size: 0.88rem;
+      color: rgba(245, 233, 208, 0.5);
+      margin-top: 0.25rem;
+    }
+    .app-description {
+      font-size: 0.95rem;
+      line-height: 1.7;
+      color: rgba(245, 233, 208, 0.65);
+      margin-bottom: 1.5rem;
+    }
+    .app-links {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .app-link {
+      flex: 1;
+      min-width: 120px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      padding: 0.6rem 1rem;
+      background: rgba(245, 233, 208, 0.08);
+      border: 1px solid rgba(245, 233, 208, 0.15);
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: rgba(245, 233, 208, 0.8);
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .app-link:hover {
+      background: rgba(245, 233, 208, 0.15);
+      border-color: rgba(245, 233, 208, 0.3);
+      color: var(--cream);
+      transform: translateY(-1px);
+    }
+    .app-link svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+    /* Personal favorite badge */
+    .favorite-badge {
+      position: absolute;
+      top: -12px;
+      right: 1.5rem;
+      background: var(--amber);
+      color: var(--brown);
+      font-family: 'Caveat', cursive;
+      font-size: 0.95rem;
+      padding: 0.35rem 0.9rem;
+      border-radius: 100px;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(212, 132, 59, 0.4);
+      transform: rotate(-2deg);
+    }
+    .testimonial-box {
+      background: rgba(212, 132, 59, 0.08);
+      border-left: 3px solid var(--amber);
+      padding: 1rem 1.2rem;
+      border-radius: 6px;
+      margin-top: 1.2rem;
+      font-style: italic;
+      font-size: 0.9rem;
+      line-height: 1.7;
+      color: rgba(245, 233, 208, 0.7);
+    }
+    @media (max-width: 768px) {
+      .apps-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Image caption that appears when an image is set */
+    .step-img-caption {
+      font-family: 'Caveat', cursive; font-size: 0.82rem;
+      color: rgba(245, 233, 208, 0.35);
+      padding: 0.3rem 0.8rem 0.6rem;
+      display: none;
+    }
+    .step-img-wrap.has-image + .step-img-caption { display: block; }
+
+
+    /* ═══════════════════════════════════════════
+       WHY IT MATTERS SECTION
+    ════════════════════════════════════════════ */
+    #why { background: var(--brown-dark); }
+
+    .why-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(2rem, 5vw, 4rem);
+      align-items: start; margin-top: 2.5rem;
+    }
+    .why-text p {
+      font-size: clamp(0.94rem, 2vw, 1.04rem); line-height: 1.8;
+      color: rgba(245, 233, 208, 0.7); margin-bottom: 1.1rem;
+    }
+    .why-text blockquote {
+      border-left: 2px solid var(--amber); padding-left: 1.4rem;
+      margin: 1.8rem 0;
+      font-family: 'Fraunces', serif; font-style: italic;
+      font-size: clamp(1rem, 2.2vw, 1.18rem);
+      color: var(--cream); line-height: 1.55;
+    }
+    .doodle-annotation {
+      font-family: 'Caveat', cursive; font-size: 1.05rem;
+      color: var(--amber); display: inline-block;
+      transform: rotate(-1.5deg); margin-top: 0.4rem;
+    }
+
+    .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+    .stat-card {
+      background: rgba(245, 233, 208, 0.04);
+      border: 1px solid rgba(245, 233, 208, 0.08);
+      border-radius: 16px; padding: clamp(1.1rem, 3vw, 1.8rem);
+    }
+    .stat-number {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(2.2rem, 5vw, 3rem); font-weight: 700;
+      color: var(--warm); line-height: 1;
+      display: flex; align-items: flex-end; gap: 0.15rem;
+    }
+    .stat-suffix { font-size: 1.3rem; font-weight: 300; color: var(--amber); margin-bottom: 0.25rem; }
+    .stat-label { margin-top: 0.5rem; font-size: 0.82rem; color: rgba(245, 233, 208, 0.5); line-height: 1.45; }
+
+    .chart-card {
+      margin-top: 1.25rem; padding: 1.4rem;
+      background: rgba(245, 233, 208, 0.03);
+      border: 1px solid rgba(245, 233, 208, 0.07);
+      border-radius: 16px;
+    }
+    .chart-card svg { width: 100%; opacity: 0.7; }
+    .chart-card p { font-size: 0.78rem; color: rgba(245, 233, 208, 0.3); font-family: 'Caveat', cursive; margin-top: 0.3rem; }
+
+
+    /* ═══════════════════════════════════════════
+       ABOUT SECTION
+    ════════════════════════════════════════════ */
+    #about { background: rgba(0, 0, 0, 0.12); }
+
+    .about-inner { max-width: 680px; margin: 0 auto; text-align: center; }
+
+    .avatar-wrap { position: relative; display: inline-block; margin-bottom: 1.75rem; }
+    .avatar-ring {
+      position: absolute; inset: -8px;
+      border: 1.5px dashed rgba(212, 132, 59, 0.38);
+      border-radius: 50%;
+      animation: spinSlow 20s linear infinite;
+    }
+    @keyframes spinSlow { to { transform: rotate(360deg); } }
+
+    /* Profile image container
+       Replace ◎ with <img src="images/about/profile.jpg" alt="Your Name">
+       Image file lives in: images/about/ */
+    .avatar-img {
+      width: 100px; height: 100px; border-radius: 50%;
+      background: rgba(245, 233, 208, 0.07);
+      border: 2px solid rgba(245, 233, 208, 0.14);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Fraunces', serif; font-size: 2.6rem; color: var(--warm);
+      position: relative; z-index: 1; overflow: hidden;
+    }
+    .avatar-img img { width: 100%; height: 100%; object-fit: cover; }
+
+    .about-name { font-family: 'Fraunces', serif; font-size: clamp(1.5rem, 4vw, 1.8rem); font-weight: 700; color: var(--cream); margin-bottom: 0.25rem; }
+    .about-handle { font-family: 'Caveat', cursive; font-size: 1rem; color: var(--amber); margin-bottom: 1.4rem; }
+    .about-bio { font-size: clamp(0.9rem, 2vw, 1rem); line-height: 1.8; color: rgba(245, 233, 208, 0.62); max-width: 520px; margin: 0 auto 1rem; }
+
+    .social-links { display: flex; justify-content: center; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.25rem; }
+    .social-link {
+      display: inline-flex; align-items: center; gap: 0.45rem;
+      padding: 0.55rem 1.3rem;
+      background: rgba(245, 233, 208, 0.05);
+      border: 1px solid rgba(245, 233, 208, 0.11);
+      border-radius: 100px; font-size: 0.8rem;
+      color: rgba(245, 233, 208, 0.6); text-decoration: none;
+      letter-spacing: 0.04em; transition: background 0.2s, color 0.2s; cursor: pointer;
+    }
+    .social-link:hover { background: rgba(245, 233, 208, 0.11); color: var(--cream); }
+
+
+    /* ═══════════════════════════════════════════
+       FOOTER
+       Contains: copyright | doodle eye | tagline
+    ════════════════════════════════════════════ */
+    footer {
+      padding: 2rem var(--px);
+      border-top: 1px solid rgba(245, 233, 208, 0.08);
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 1rem;
+      font-size: 0.75rem;
+      color: rgba(245, 233, 208, 0.28);
+      letter-spacing: 0.04em;
+    }
+    footer a { color: inherit; text-decoration: none; }
+    .footer-left  { }
+    .footer-right { text-align: right; }
+    .footer-heart { color: var(--amber); }
+
+    /* Doodle eye in footer — centered column */
+    .footer-eye-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .footer-eye-wrap svg { opacity: 0.55; transition: opacity 0.3s; }
+    .footer-eye-wrap:hover svg { opacity: 0.85; }
+    .footer-eye-label {
+      font-family: 'Caveat', cursive;
+      font-size: 0.82rem;
+      color: rgba(245, 233, 208, 0.22);
+      letter-spacing: 0.04em;
+    }
+
+    /* Responsive footer */
+    @media (max-width: 600px) {
+      footer {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+      .footer-right { text-align: center; }
+    }
+
+
+    /* ═══════════════════════════════════════════
+       SCROLL REVEAL
+    ════════════════════════════════════════════ */
+    .reveal {
+      opacity: 0; transform: translateY(18px);
+      transition: opacity 0.55s ease, transform 0.55s ease;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal:nth-child(2) { transition-delay: 0.08s; }
+    .reveal:nth-child(3) { transition-delay: 0.16s; }
+    .reveal:nth-child(4) { transition-delay: 0.24s; }
+
+
+    /* ═══════════════════════════════════════════
+       RESPONSIVE BREAKPOINTS
+    ════════════════════════════════════════════ */
+
+    /* ≤ 768px — tablets & phones */
+    @media (max-width: 768px) {
+      .nav-hamburger { display: flex; }
+      .nav-links     { display: none; }
+      .guide-header  { flex-direction: column; }
+      .guide-doodle-text { display: none; }
+      .why-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ≤ 480px — small phones */
+    @media (max-width: 480px) {
+      .steps-grid { grid-template-columns: 1fr; }
+      .stat-row   { grid-template-columns: 1fr; }
+      .tab-btn    { padding: 1rem 1.1rem; font-size: 0.75rem; }
+      .social-link { flex: 1 1 120px; justify-content: center; }
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <!-- Custom cursor (desktop only) -->
+  <div class="cursor cursor-dot"  id="cursorDot"></div>
+  <div class="cursor cursor-ring" id="cursorRing"></div>
+
+
+  <!-- ═══════════════════════════════════════════
+       NAVIGATION
+       To add a link: copy an <li> in both .nav-links
+       and .nav-drawer ul
+  ════════════════════════════════════════════ -->
+  <nav aria-label="Main navigation">
+    <a href="#" class="nav-logo">AttentionAid<span>.</span></a>
+    <ul class="nav-links">
+      <li><a href="#guide">Guide</a></li>
+      <li><a href="#why">Why It Matters</a></li>
+      <li><a href="#alternative">The Alternative</a></li>
+      <li><a href="#about">About</a></li>
+    </ul>
+    <button class="nav-hamburger" id="hamburger" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <div class="nav-drawer" id="navDrawer" aria-hidden="true">
+    <ul>
+      <li><a href="#guide"  onclick="closeDrawer()">Guide</a></li>
+      <li><a href="#why"   onclick="closeDrawer()">Why It Matters</a></li>
+      <li><a href="#alternative" onclick="closeDrawer()">The Alternative</a></li>
+      <li><a href="#about" onclick="closeDrawer()">About</a></li>
+    </ul>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════
+       HERO SECTION
+       Edit: .hero-tag, h1, .hero-sub, .hero-cta href
+  ════════════════════════════════════════════ -->
+  <section id="hero" aria-label="Hero">
+
+    <!-- Background squiggles (visual only) -->
+    <div class="squiggles" aria-hidden="true">
+      <svg style="top:-5%;left:-3%;width:45%;" viewBox="0 0 400 300">
+        <path d="M20,150 Q60,80 100,150 Q140,220 180,150 Q220,80 260,150 Q300,220 340,150 Q380,80 400,150" fill="none" stroke="#f5e9d0" stroke-width="2"/>
+        <path d="M20,180 Q60,110 100,180 Q140,250 180,180 Q220,110 260,180 Q300,250 340,180 Q380,110 400,180" fill="none" stroke="#f5e9d0" stroke-width="1.5"/>
+      </svg>
+      <svg style="bottom:5%;right:5%;width:30%;opacity:0.05;" viewBox="0 0 300 200">
+        <path d="M0,80 C30,30 70,130 100,80 C130,30 170,130 200,80 C230,30 270,130 300,80" fill="none" stroke="#f5e9d0" stroke-width="1.5"/>
+        <circle cx="60" cy="100" r="20" fill="none" stroke="#f5e9d0" stroke-width="1"/>
+        <circle cx="160" cy="120" r="12" fill="none" stroke="#f5e9d0" stroke-width="1"/>
+      </svg>
+      <svg style="top:10%;right:35%;width:8%;opacity:0.08;" viewBox="0 0 60 60">
+        <path d="M5,30 Q20,5 30,30 Q40,55 55,30" fill="none" stroke="#d4843b" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </div>
+
+    <!-- Text -->
+    <div class="hero-content">
+      <div class="hero-tag">your attention is yours</div>
+      <h1>
+        Gain back<br>
+        your <span class="doodle-underline">attention
+          <svg viewBox="0 0 320 28" height="28" fill="none" aria-hidden="true">
+            <path d="M4 18 Q30 6 60 16 Q100 28 140 14 Q180 2 220 14 Q260 26 316 10" stroke="#d4843b" stroke-width="3" stroke-linecap="round"/>
+            <path d="M8 22 Q50 12 90 20 Q130 28 170 18 Q210 8 260 18 Q290 24 314 16" stroke="#d4843b" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+          </svg>
+        </span>
+      </h1>
+      <p class="hero-sub">Short-form content hijacks your dopamine loop. This is your toolkit to take it back — one blocked feed at a time.</p>
+      <a href="#guide" class="hero-cta">
+        Start the guide
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+    </div>
+
+    <!-- ─────────────────────────────────────────
+         DOODLE EYE — visible on ALL devices
+         Mobile: stacks below text as a block element
+         Tablet/Desktop: floats absolutely to the right
+         (positioning handled entirely in CSS above)
+    ──────────────────────────────────────────── -->
+    <div class="hero-eye" aria-hidden="true">
+      <svg viewBox="0 0 380 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Eyelid -->
+        <path d="M30 140 Q100 30 190 28 Q280 26 350 140 Q280 260 190 258 Q100 256 30 140Z"
+              fill="rgba(107,37,13,0.3)" stroke="#f5e9d0" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M55 120 Q120 60 190 58 Q260 56 325 120"
+              fill="none" stroke="rgba(245,233,208,0.2)" stroke-width="1.5" stroke-linecap="round"/>
+        <!-- Iris -->
+        <circle cx="190" cy="140" r="72" fill="rgba(74,24,8,0.8)" stroke="#f5e9d0" stroke-width="2"/>
+        <circle cx="190" cy="140" r="62" fill="none" stroke="rgba(245,233,208,0.07)" stroke-width="8"/>
+        <circle cx="190" cy="140" r="48" fill="none" stroke="rgba(245,233,208,0.05)" stroke-width="4"/>
+        <circle cx="190" cy="140" r="72" fill="rgba(180,90,30,0.32)"/>
+        <!-- Pupil group — JS makes it follow cursor on desktop -->
+        <g class="eye-pupil">
+          <circle cx="190" cy="140" r="36" fill="#1a0905"/>
+          <circle cx="190" cy="140" r="34" fill="#0d0604"/>
+          <circle cx="176" cy="128" r="9"  fill="rgba(245,233,208,0.88)"/>
+          <circle cx="203" cy="152" r="4"  fill="rgba(245,233,208,0.38)"/>
+        </g>
+        <circle cx="190" cy="140" r="72" fill="none" stroke="#1a0905" stroke-width="6"/>
+        <!-- Upper lashes -->
+        <path d="M80 90 Q70 65 65 45"   stroke="#f5e9d0" stroke-width="2" stroke-linecap="round"/>
+        <path d="M110 68 Q108 42 112 22" stroke="#f5e9d0" stroke-width="2" stroke-linecap="round"/>
+        <path d="M145 54 Q148 28 155 10" stroke="#f5e9d0" stroke-width="2" stroke-linecap="round"/>
+        <path d="M182 48 Q188 22 192 4"  stroke="#f5e9d0" stroke-width="2" stroke-linecap="round"/>
+        <path d="M218 52 Q228 28 236 12" stroke="#f5e9d0" stroke-width="2" stroke-linecap="round"/>
+        <path d="M252 66 Q266 44 276 28" stroke="#f5e9d0" stroke-width="2" stroke-linecap="round"/>
+        <path d="M282 88 Q300 70 310 54" stroke="#f5e9d0" stroke-width="2" stroke-linecap="round"/>
+        <!-- Lower lashes -->
+        <path d="M100 190 Q88 210 85 228"   stroke="rgba(245,233,208,0.45)" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M145 215 Q142 236 145 252"  stroke="rgba(245,233,208,0.45)" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M190 222 Q190 244 192 258"  stroke="rgba(245,233,208,0.45)" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M235 215 Q238 236 236 252"  stroke="rgba(245,233,208,0.45)" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M278 192 Q290 210 294 226"  stroke="rgba(245,233,208,0.45)" stroke-width="1.5" stroke-linecap="round"/>
+        <!-- Amber accent marks -->
+        <path d="M10 100 Q-5 80 8 65"      stroke="rgba(212,132,59,0.45)" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+        <path d="M370 180 Q385 160 372 145" stroke="rgba(212,132,59,0.45)" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+        <circle cx="350" cy="60" r="4" fill="none" stroke="rgba(212,132,59,0.38)" stroke-width="1.5"/>
+        <circle cx="28"  cy="200" r="3" fill="none" stroke="rgba(212,132,59,0.38)" stroke-width="1.5"/>
+        <ellipse cx="190" cy="140" rx="165" ry="128" fill="none"
+                 stroke="rgba(245,233,208,0.04)" stroke-width="1" stroke-dasharray="6 8"/>
+      </svg>
+    </div>
+
+    <div class="scroll-hint" aria-hidden="true">
+      <svg width="18" height="28" viewBox="0 0 18 28" fill="none">
+        <rect x="1" y="1" width="16" height="26" rx="8" stroke="currentColor" stroke-width="1.5"/>
+        <circle cx="9" cy="8" r="2.5" fill="currentColor"/>
+      </svg>
+      scroll
+    </div>
+  </section>
+
+
+  <svg class="wavy-divider" viewBox="0 0 1440 50" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0,25 Q120,0 240,25 Q360,50 480,25 Q600,0 720,25 Q840,50 960,25 Q1080,0 1200,25 Q1320,50 1440,25 L1440,50 L0,50Z" fill="rgba(0,0,0,0.18)"/>
+  </svg>
+
+
+  <!-- ═══════════════════════════════════════════
+       GUIDE SECTION
+       ─────────────────────────────────────────
+       HOW TO EDIT STEP CARDS IN VS CODE:
+       ─────────────────────────────────────────
+       Each step card has this structure:
+
+         [div class="step-card reveal"]
+
+           STEP IMAGE (optional screenshot):
+             1. Drop screenshot into images/guide/ios/step-01.jpg
+                (use android/ or windows/ for other tabs)
+             2. Set src="images/guide/ios/step-01.jpg" on the img tag
+             3. Add class="has-image" to the div.step-img-wrap
+             4. Update the caption text in p.step-img-caption
+
+           [div class="step-img-wrap"]
+             [img src="" alt="Step screenshot" loading="lazy"]
+           [/div]
+           [p class="step-img-caption"]Caption text here[/p]
+
+           [div class="step-body"]
+             [div class="step-num"]01[/div]
+             [h3]Step title[/h3]
+             [p]Step description. Add [a href="URL"]links[/a] as needed.[/p]
+           [/div]
+
+         [/div]
+
+       To add a new platform tab:
+         1. Copy a .tab-btn button, change data-tab="newname"
+         2. Copy a .tab-panel div, change id="panel-newname"
+  ════════════════════════════════════════════ -->
+  <section id="guide" aria-label="How-to guide">
+
+    <div class="guide-header">
+      <div class="guide-header-text">
+        <div class="section-label">the toolkit</div>
+        <h2>Limit short-form content<br><em>— a guide</em></h2>
+        <p>Choose your platform below. Walk through the steps, drop in screenshots, and cut off the dopamine tap for good.</p>
+      </div>
+      <div class="guide-doodle-text" aria-hidden="true">"takes about 3 minutes, works forever →"</div>
+    </div>
+
+    <div class="tabs-container">
+
+      <!-- Tab buttons -->
+      <div class="tab-nav" role="tablist" aria-label="Platform guide tabs">
+
+        <button class="tab-btn active" data-tab="ios" role="tab" aria-selected="true" aria-controls="panel-ios">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+          </svg>
+          iOS / Safari
+        </button>
+
+        <button class="tab-btn" data-tab="android" role="tab" aria-selected="false" aria-controls="panel-android">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M17.523 15.34c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1m-11.046 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1m11.4-6.57l2-3.46-1.73-1-2.05 3.55A9.3 9.3 0 0 0 12 7c-1.24 0-2.41.27-3.45.75L6.5 4.19 4.77 5.19l2.27 3.46C5.38 9.84 4.5 11.61 4.5 13.5h15c0-1.89-.88-3.66-2.27-4.83"/>
+          </svg>
+          Android
+        </button>
+
+        <button class="tab-btn" data-tab="windows" role="tab" aria-selected="false" aria-controls="panel-windows">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M3 12V6.75l6-1.32v6.57H3zm17 0H11v-6.9l9-1.575V12zM3 13h6v6.57L3 18.25V13zm8 0h9v6.945l-9-1.575V13z"/>
+          </svg>
+          Windows / Mac
+        </button>
+
+      </div><!-- /.tab-nav -->
+
+
+      <!-- ════════════════════════════════════════
+           iOS / SAFARI PANEL
+           Userscripts method for blocking Shorts
+      ═════════════════════════════════════════ -->
+      <div class="tab-panel active" id="panel-ios" role="tabpanel">
+        <div class="panel-intro">
+          <span class="platform-badge">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+            iOS &amp; Safari
+          </span>
+          <span class="panel-note">Works on iPhone, iPad &amp; Mac</span>
+        </div>
+
+        <div class="steps-grid">
+
+          <!-- Step 01: Install Userscripts -->
+          <div class="step-card reveal">
+            <div class="step-img-wrap app-icon-wrap has-image">
+              <img src="https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/47/be/20/47be20a2-fedd-cf0b-3a35-476ae727ae01/AppIcon-0-0-1x_U007emarketing-0-8-0-85-220.png/400x400ia-75.webp" alt="Userscripts app icon" class="app-icon-hero" loading="lazy">
+            </div>
+            <div class="step-body">
+              <div class="step-num">01</div>
+              <h3>Get Userscripts</h3>
+              <p>Install <strong>Userscripts</strong> — a Safari extension that lets you run custom JavaScript on any website, including YouTube.</p>
+              <a href="https://apps.apple.com/app/userscripts/id1463298887" target="_blank" rel="noopener" class="install-btn">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+                Install from App Store
+              </a>
+            </div>
+          </div>
+
+          <!-- Step 02: Enable in Settings (with full-height image) -->
+          <div class="step-card reveal">
+            <div class="step-img-wrap full-height has-image">
+              <img src="https://ik.imagekit.io/attentionaid/Safari/enable_extension?updatedAt=1771746869467" alt="Enable Userscripts extension in Settings" loading="lazy">
+            </div>
+            <p class="step-img-caption">Settings → Safari → Extensions</p>
+            <div class="step-body">
+              <div class="step-num">02</div>
+              <h3>Enable the Extension</h3>
+              <p>Open <strong>Settings → Safari → Extensions</strong> and toggle <strong>Userscripts</strong> on. Grant it permission to run on all websites when prompted.</p>
+            </div>
+          </div>
+
+          <!-- Step 03: Install Script (with GIF + play button) -->
+          <div class="step-card reveal">
+            <div class="step-img-wrap has-image gif-play-overlay" id="gifOverlay">
+              <img src="https://ik.imagekit.io/attentionaid/Safari/Thumbnail.png" 
+                   alt="Userscripts installation demo" 
+                   loading="lazy" 
+                   id="demoGif"
+                   data-gif-src="https://ik.imagekit.io/attentionaid/Safari/Safari_userscripts.gif?updatedAt=1771740735439">
+              <div class="gif-play-btn">
+                <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              </div>
+            </div>
+            <p class="step-img-caption">Installation walkthrough on iPhone (click to play)</p>
+            <div class="step-body">
+              <div class="step-num">03</div>
+              <h3>Add the Shorts Blocker Script</h3>
+              <p>Visit <a href="https://greasyfork.org/en/scripts/522057-remove-youtube-shorts" target="_blank" rel="noopener" style="color:var(--amber);font-weight:500;">this script on Greasy Fork</a>. Safari will detect it and Userscripts will prompt you to install. Tap <strong>Install</strong> → Done.</p>
+              <p style="margin-top:0.8rem; font-size:0.82rem; opacity:0.65;">The animated guide above shows the full process. Works identically on iPad and Mac Safari.</p>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Manual Installation (Advanced Users) -->
+        <div style="margin-top:2.5rem; padding-top:2rem; border-top:1px solid rgba(245,233,208,0.1);">
+          <h3 style="font-family:'Fraunces',serif; font-size:1.3rem; color:var(--cream); margin-bottom:0.8rem; display:flex; align-items:center; gap:0.6rem;">
+            <span>Manual Installation</span>
+            <span style="font-size:0.8rem; color:rgba(245,233,208,0.4); font-weight:300; font-family:'DM Sans',sans-serif;">(Advanced)</span>
+          </h3>
+
+          <p style="font-size:0.92rem; line-height:1.7; color:rgba(245,233,208,0.65); margin-bottom:1.5rem;">
+            If you prefer installing the script manually, download the file and place it in your Userscripts folder.
+          </p>
+
+          <div class="manual-install-grid">
+
+            <!-- Manual Step 01: Download Script -->
+            <div class="step-card reveal">
+              <div class="step-body">
+                <div class="step-num" style="color:rgba(232,196,122,0.28); font-size:1.8rem;">M1</div>
+                <h3>Download the Script File</h3>
+                <p>Download the <code>Remove_YouTube_Shorts.user.js</code> file or copy the code below.</p>
+                <a href="images/guide/ios/Remove_YouTube_Shorts.user.js" download class="script-download-link" style="display:inline-flex; margin-top:0.6rem; margin-bottom:1rem;">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                  Download Script
+                </a>
+                <div class="code-container-wrap">
+                  <button class="copy-code-btn" onclick="copyCode(this, 'iosScript')">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                    Copy
+                  </button>
+                  <div class="code-container" id="iosScript">// ==UserScript==
+// @name               Remove YouTube Shorts
+// @namespace          https://github.com/strangeZombies
+// @version            2025.4.4.0
+// @description        Remove YouTube Shorts tags, dismissible elements, Shorts links, and Reel Shelf
+// @author             StrangeZombies
+// @icon               https://www.google.com/s2/favicons?sz=64&domain=youtube.com
+// @match              https://*.youtube.com/*
+// @match              https://m.youtube.com/*
+// @grant              none
+// @run-at             document-start
+// @downloadURL https://update.greasyfork.org/scripts/522057/Remove%20YouTube%20Shorts.user.js
+// @updateURL https://update.greasyfork.org/scripts/522057/Remove%20YouTube%20Shorts.meta.js
+// ==/UserScript==
+
+(function () {
+    'use strict';
+
+    const hideHistoryShorts = false;
+    const debug = false;
+    const commonSelectors = [
+        'a[href*="/shorts/"]',
+        '[is-shorts]',
+        'yt-chip-cloud-chip-renderer:has(a[href*="/shorts/"])',
+        'ytd-reel-shelf-renderer',
+        'ytd-thumbnail-overlay-time-status-renderer[overlay-style="SHORTS"]',
+        '#guide [title="Shorts"]',
+        '.ytd-mini-guide-entry-renderer[title="Shorts"]',
+        '.ytd-mini-guide-entry-renderer[aria-label="Shorts"]',
+    ];
+
+    const mobileSelectors = [
+        '.pivot-shorts',
+        'ytm-reel-shelf-renderer',
+        'ytm-search ytm-video-with-context-renderer [data-style="SHORTS"]',
+    ];
+
+    const feedSelectors = [
+        'ytd-browse[page-subtype="subscriptions"] ytd-grid-video-renderer [overlay-style="SHORTS"]',
+        'ytd-browse[page-subtype="subscriptions"] ytd-video-renderer [overlay-style="SHORTS"]',
+        'ytd-browse[page-subtype="subscriptions"] ytd-rich-item-renderer [overlay-style="SHORTS"]',
+    ];
+    const channelSelectors = ['yt-tab-shape[tab-title="Shorts"]'];
+    const historySelectors = ['ytd-browse[page-subtype="history"] ytd-reel-shelf-renderer'];
+
+    function removeElementsBySelectors(selectors) {
+        selectors.forEach((selector) => {
+            try {
+                const elements = document.querySelectorAll(selector);
+                elements.forEach((element) => {
+                    if (element.dataset.removedByScript) return;
+                    let parent = element.closest(
+                        'ytd-video-renderer, ytd-grid-video-renderer, ytd-compact-video-renderer, ytd-rich-item-renderer, ytm-video-with-context-renderer'
+                    );
+                    if (!parent) parent = element;
+                    parent.remove();
+                    parent.dataset.removedByScript = 'true';
+                    if (debug) console.log(`Removed element: ${parent}`);
+                });
+            } catch (error) {
+                if (debug) console.warn(`Error processing selector: ${selector}`, error);
+            }
+        });
+    }
+
+    function removeElements() {
+        const currentUrl = window.location.href;
+        if (debug) console.log('Current URL:', currentUrl);
+
+        if (currentUrl.includes('m.youtube.com')) {
+            removeElementsBySelectors(mobileSelectors);
+        }
+        if (currentUrl.includes('/feed/subscriptions')) {
+            removeElementsBySelectors(feedSelectors);
+        }
+        if (hideHistoryShorts && currentUrl.includes('/feed/history')) {
+            removeElementsBySelectors(historySelectors);
+        }
+        removeElementsBySelectors(commonSelectors);
+    }
+
+    function debounce(func, delay) {
+        let timeout;
+        return (...args) => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), delay);
+        };
+    }
+
+    const debouncedRemoveElements = debounce(removeElements, 300);
+
+    function init() {
+        if (debug) console.log('Remove YouTube Shorts script activated');
+        removeElements();
+        const isFirefox = navigator.userAgent.includes('Firefox');
+        if (isFirefox) {
+            window.addEventListener('popstate', removeElements);
+        } else {
+            document.addEventListener('yt-navigate-finish', removeElements);
+        }
+        const observer = new MutationObserver(debouncedRemoveElements);
+        observer.observe(document.body, { childList: true, subtree: true });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();</div>
+                </div>
+                <p style="margin-top:1rem; font-size:0.78rem; color:rgba(245,233,208,0.45);">
+                  Original script by <a href="https://github.com/strangeZombies" target="_blank" rel="noopener" style="color:var(--amber);">StrangeZombies</a>
+                </p>
+              </div>
+            </div>
+
+            <!-- Manual Step 02 -->
+            <div class="step-card reveal">
+              <div class="step-body">
+                <div class="step-num" style="color:rgba(232,196,122,0.28); font-size:1.8rem;">M2</div>
+                <h3>Move to Userscripts Folder</h3>
+                <p>Using the <strong>Files</strong> app, move the <code>.user.js</code> file into the <strong>Userscripts</strong> folder (it's created automatically after you install the extension).</p>
+              </div>
+            </div>
+
+            <!-- Manual Step 03 -->
+            <div class="step-card reveal">
+              <div class="step-body">
+                <div class="step-num" style="color:rgba(232,196,122,0.28); font-size:1.8rem;">M3</div>
+                <h3>Enable in Safari</h3>
+                <p>Open Safari → Tap the <strong>aA</strong> icon (left of address bar) → <strong>Manage Extensions</strong> → <strong>Userscripts</strong> → Tap the folder icon → Find your script → Toggle it <strong>On</strong>.</p>
+                <p style="margin-top:0.6rem;">Reload YouTube. Shorts are gone.</p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Legal Disclaimer -->
+        <div class="legal-disclaimer">
+          <strong>Legal Disclaimer:</strong> This guide is provided for educational purposes. I take no responsibility for scripts installed by you or any issues that may arise. Use these tools at your own discretion.
+        </div>
+
+      </div><!-- /#panel-ios -->
+
+
+      <!-- ════════════════════════════════════════
+           ANDROID PANEL
+           App-based blocking methods
+      ═════════════════════════════════════════ -->
+      <div class="tab-panel" id="panel-android" role="tabpanel">
+        <div class="panel-intro">
+          <span class="platform-badge">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.523 15.34c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1m-11.046 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1m11.4-6.57l2-3.46-1.73-1-2.05 3.55A9.3 9.3 0 0 0 12 7c-1.24 0-2.41.27-3.45.75L6.5 4.19 4.77 5.19l2.27 3.46C5.38 9.84 4.5 11.61 4.5 13.5h15c0-1.89-.88-3.66-2.27-4.83"/></svg>
+            Android
+          </span>
+          <span class="panel-note">System-wide blocking apps</span>
+        </div>
+
+        <div class="steps-grid">
+
+          <!-- Step 01: No Shorts App -->
+          <div class="step-card reveal">
+            <div class="step-img-wrap app-icon-wrap has-image">
+              <img src="https://play-lh.googleusercontent.com/lOCJ9616hn80klzWz-kx_wXJls2U9sQJJrhWCQtWgy7j0h8EteHXdRQJjDuDw4V4_G_n=w480-h960-rw" alt="No Shorts app icon" class="app-icon-hero" loading="lazy">
+            </div>
+            <div class="step-body">
+              <div class="step-num">01</div>
+              <h3>No Shorts App</h3>
+              <p>Blocks Shorts and Reels across YouTube and Instagram — system-wide. Works by intercepting the app feeds before they load.</p>
+              <a href="https://play.google.com/store/apps/details?id=com.app.noshorts&hl=en_IN" target="_blank" rel="noopener" class="install-btn">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.523 15.34c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1m-11.046 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1m11.4-6.57l2-3.46-1.73-1-2.05 3.55A9.3 9.3 0 0 0 12 7c-1.24 0-2.41.27-3.45.75L6.5 4.19 4.77 5.19l2.27 3.46C5.38 9.84 4.5 11.61 4.5 13.5h15c0-1.89-.88-3.66-2.27-4.83"/></svg>
+                Install from Play Store
+              </a>
+              <div class="step-alert" style="margin-top:1rem;">
+                <span class="step-alert-icon">⚠</span>
+                <div>This app displays ads. Disconnect social accounts if you're concerned about data privacy.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 02: NoScroll App -->
+          <div class="step-card reveal">
+            <div class="step-img-wrap app-icon-wrap has-image">
+              <img src="https://play-lh.googleusercontent.com/CvxNjv4V4Jor-KYotjj8ktUz75oZZizN5fNj9FVpk7nhYYggkgI90O8rSulgRxk8LIZN=s96-rw" alt="NoScroll app icon" class="app-icon-hero" loading="lazy">
+            </div>
+            <div class="step-body">
+              <div class="step-num">02</div>
+              <h3>NoScroll: Block Infinite Feeds</h3>
+              <p>Stops infinite scroll on Reels, Shorts, and Stories. The feed just… stops. No more mindless swiping.</p>
+              <a href="https://play.google.com/store/apps/details?id=com.newswarajya.noswipe.reelshortblocker&hl=en_IN" target="_blank" rel="noopener" class="install-btn">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.523 15.34c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1m-11.046 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1m11.4-6.57l2-3.46-1.73-1-2.05 3.55A9.3 9.3 0 0 0 12 7c-1.24 0-2.41.27-3.45.75L6.5 4.19 4.77 5.19l2.27 3.46C5.38 9.84 4.5 11.61 4.5 13.5h15c0-1.89-.88-3.66-2.27-4.83"/></svg>
+                Install from Play Store
+              </a>
+              <div class="step-alert" style="margin-top:1rem;">
+                <span class="step-alert-icon">!</span>
+                <div>Can be buggy on phones with aggressive battery optimization. Disable battery restrictions for this app in <strong>Settings → Apps → NoScroll → Battery</strong>.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 03: NewPipe -->
+          <div class="step-card reveal">
+            <div class="step-body">
+              <div class="step-num">03</div>
+              <h3>NewPipe (Advanced)</h3>
+              <p><strong>NewPipe</strong> is a libre, lightweight YouTube client with <em>zero</em> Shorts, no ads, no tracking, and no Google Services required. It's the nuclear option.</p>
+              <a href="https://github.com/TeamNewPipe/NewPipe/releases/latest" target="_blank" rel="noopener" class="install-btn" style="background:rgba(245,233,208,0.15); color:var(--cream); border-color:rgba(245,233,208,0.2);">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                Download from GitHub
+              </a>
+              <div class="step-alert" style="margin-top:1rem;">
+                <span class="step-alert-icon">!</span>
+                <div>APKs outside the Play Store require <strong>Install from unknown sources</strong> enabled in <strong>Settings → Security → Unknown Sources</strong>.</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div><!-- /#panel-android -->
+
+
+      <!-- ════════════════════════════════════════
+           WINDOWS / MAC PANEL
+           Browser-based blocking methods
+      ═════════════════════════════════════════ -->
+      <div class="tab-panel" id="panel-windows" role="tabpanel">
+        <div class="panel-intro">
+          <span class="platform-badge">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 12V6.75l6-1.32v6.57H3zm17 0H11v-6.9l9-1.575V12zM3 13h6v6.57L3 18.25V13zm8 0h9v6.945l-9-1.575V13z"/></svg>
+            Windows &amp; macOS
+          </span>
+          <span class="panel-note">Works on Chrome, Firefox, Safari, Edge &amp; Brave</span>
+        </div>
+
+        <div class="steps-grid">
+
+          <!-- Step 01: Chrome Extension -->
+          <div class="step-card reveal">
+            <div class="step-img-wrap app-icon-wrap has-image">
+              <img src="https://lh3.googleusercontent.com/yhceWQbXd08xDwZHIUQIdrzWOaEokadUOqKfwAkDBMWFSXaE583AYXIDVG-ALC_YyBfvaUjklCzjSApNe9D_v51Q=s120" alt="Remove YouTube Shorts extension icon" class="app-icon-hero" loading="lazy">
+            </div>
+            <div class="step-body">
+              <div class="step-num">01</div>
+              <h3>Remove YouTube Shorts</h3>
+              <p>A lightweight Chrome extension that strips Shorts from every corner of YouTube — search, home, sidebar, and channels.</p>
+              <a href="https://chromewebstore.google.com/detail/remove-youtube-shorts/mgngbgbhliflggkamjnpdmegbkidiapm?hl=en" target="_blank" rel="noopener" class="install-btn">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                Add to Chrome
+              </a>
+              <p style="margin-top:0.8rem; font-size:0.82rem; color:rgba(245,233,208,0.55);">Also works with Kiwi Browser on Android.</p>
+            </div>
+          </div>
+
+          <!-- Step 02: Tampermonkey -->
+          <div class="step-card reveal">
+            <div class="step-img-wrap app-icon-wrap has-image">
+              <img src="https://lh3.googleusercontent.com/zoY8FwoOqPlBgFxcmFdNSK2Q4CcLmv-gw7vTjF2KMR9cEabwBsGNrHBTEMitn0Ba6OmCVJ0NcLnFGu3N97BP8Phu0g=s120" alt="Tampermonkey icon" class="app-icon-hero" loading="lazy">
+            </div>
+            <div class="step-body">
+              <div class="step-num">02</div>
+              <h3>Tampermonkey (Advanced)</h3>
+              <p>A userscript manager that lets you run custom JavaScript on websites. Works on Chrome, Firefox, Safari, Edge, and Brave.</p>
+              <a href="https://www.tampermonkey.net/" target="_blank" rel="noopener" class="install-btn" style="background:rgba(245,233,208,0.15); color:var(--cream); border-color:rgba(245,233,208,0.2);">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                Install Tampermonkey
+              </a>
+              <p style="margin-top:0.8rem; font-size:0.85rem; color:rgba(245,233,208,0.6);">For power users who want fine-grained control via custom scripts.</p>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Tampermonkey Script Section -->
+        <div style="margin-top:2.5rem; padding-top:2rem; border-top:1px solid rgba(245,233,208,0.1);">
+          <h3 style="font-family:'Fraunces',serif; font-size:1.3rem; color:var(--cream); margin-bottom:0.8rem; display:flex; align-items:center; gap:0.6rem;">
+            <span>Custom Userscript</span>
+            <span style="font-size:0.8rem; color:rgba(245,233,208,0.4); font-weight:300; font-family:'DM Sans',sans-serif;">(Optional)</span>
+          </h3>
+
+          <p style="font-size:0.92rem; line-height:1.7; color:rgba(245,233,208,0.65); margin-bottom:1.5rem;">
+            If you prefer a scriptable solution with a control panel, install the script below in Tampermonkey. It removes Shorts from YouTube and adds a sidebar panel for toggling features.
+          </p>
+
+          <div class="code-container-wrap">
+            <button class="copy-code-btn" onclick="copyCode(this, 'windowsScript')">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+              Copy
+            </button>
+            <div class="code-container" id="windowsScript" style="max-height:300px; overflow-y:auto; font-size:0.72rem; line-height:1.4;">
+// ==UserScript==
+// @name         YouTube Shorts Remover
+// @namespace    http://tampermonkey.net/
+// @version      1.0.0
+// @description  Completely removes YouTube Shorts - WORKING 2025
+// @author       BennoGHG
+// @match        https://www.youtube.com/*
+// @match        https://m.youtube.com/*
+// @grant        GM_addStyle
+// @grant        GM_setValue
+// @grant        GM_getValue
+// @run-at       document-start
+// @license      MIT
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    // Configuration
+    const config = {
+        enabled: GM_getValue('shortsRemoverEnabled', true),
+        removeNavigation: GM_getValue('removeNavigation', true),
+        removeFromHomepage: GM_getValue('removeFromHomepage', true),
+        removeFromSearch: GM_getValue('removeFromSearch', true),
+        redirectShortsUrls: GM_getValue('redirectShortsUrls', true)
+    };
+
+    // CSS to hide Shorts elements
+    const shortsRemovalCSS = `
+        ytd-guide-entry-renderer:has-text(Shorts),
+        ytd-reel-shelf-renderer,
+        ytd-shorts-shelf-renderer,
+        ytd-rich-item-renderer:has(ytd-thumbnail-overlay-time-status-renderer[overlay-style="SHORTS"]),
+        ytd-video-renderer:has(ytd-thumbnail-overlay-time-status-renderer[overlay-style="SHORTS"]) {
+            display: none !important;
+        }
+    `;
+
+    // Apply CSS
+    if (config.enabled) {
+        GM_addStyle(shortsRemovalCSS);
+    }
+
+    // Redirect /shorts/ URLs to /watch?v=
+    if (config.redirectShortsUrls && window.location.href.includes('/shorts/')) {
+        const videoId = window.location.href.split('/shorts/')[1].split('?')[0];
+        window.location.replace(`https://www.youtube.com/watch?v=${videoId}`);
+    }
+
+    // Full script with sidebar controls and mutation observer continues...
+    // (See complete 19KB version in Windows.md)
+
+})();
+          </div>
+          </div>
+
+          <p style="margin-top:1rem; font-size:0.82rem; color:rgba(245,233,208,0.5);">
+            <strong>Installation:</strong> Copy the code → Open Tampermonkey → Create New Script → Paste → Save. Reload YouTube.
+          </p>
+
+        </div>
+
+      </div><!-- /#panel-windows -->
+
+    </div><!-- /.tabs-container -->
+  </section>
+
+
+  <svg class="wavy-divider" viewBox="0 0 1440 50" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0,18 Q180,50 360,18 Q540,-14 720,18 Q900,50 1080,18 Q1260,-14 1440,18 L1440,50 L0,50Z" fill="rgba(0,0,0,0.12)"/>
+  </svg>
+
+
+  <!-- ═══════════════════════════════════════════
+       WHY IT MATTERS SECTION
+       Edit body copy, blockquote, and stat cards
+  ════════════════════════════════════════════ -->
+  <section id="why" aria-label="Why attention matters">
+    <div class="section-label">the science</div>
+    <h2>Why it <em>matters</em></h2>
+
+    <div class="why-grid">
+      <div class="why-text">
+        <p class="reveal">Short-form video is engineered to exploit the human attention system. Every swipe delivers a micro-reward, training your brain to crave novelty over depth.</p>
+        <p class="reveal">The average human attention span dropped from 12 seconds in 2000 to just 8 seconds today — shorter than a goldfish. We are in an unprecedented attention crisis, and algorithms are built to deepen it.</p>
+        <blockquote class="reveal">
+          "The best minds of my generation are thinking about how to make people click ads. That sucks."
+          <cite style="display:block; margin-top:0.5rem; font-size:0.85em; opacity:0.7;">— Jeff Hammerbacher, early Facebook engineer</cite>
+        </blockquote>
+        <p class="reveal">Reclaiming your attention isn't about willpower. It's about building an environment that doesn't work against you. The tools above are your first line of defence.</p>
+        <span class="doodle-annotation reveal">↑ your focus is worth protecting</span>
+      </div>
+
+      <div>
+        <div class="stat-row">
+          <div class="stat-card reveal">
+            <div class="stat-number">95<span class="stat-suffix">min</span></div>
+            <div class="stat-label">Average daily TikTok usage per user in 2024</div>
+          </div>
+          <div class="stat-card reveal">
+            <div class="stat-number">8<span class="stat-suffix">sec</span></div>
+            <div class="stat-label">Average attention span — down from 12s in 2000</div>
+          </div>
+          <div class="stat-card reveal">
+            <div class="stat-number">23<span class="stat-suffix">min</span></div>
+            <div class="stat-label">Time to fully refocus after a single distraction</div>
+          </div>
+          <div class="stat-card reveal">
+            <div class="stat-number">4<span class="stat-suffix">hrs</span></div>
+            <div class="stat-label">Daily screen time recovered after blocking short-form apps</div>
+          </div>
+        </div>
+        <div class="chart-card reveal">
+          <svg viewBox="0 0 360 80" fill="none" aria-hidden="true">
+            <text x="12" y="38" font-family="Caveat, cursive" font-size="17" fill="#d4843b" opacity="0.55">before blocking</text>
+            <path d="M0 60 Q30 20 60 55 Q90 40 120 50 Q150 60 180 45 Q210 30 240 42 Q270 55 300 38 Q330 22 360 30" stroke="rgba(212,132,59,0.32)" stroke-width="2" fill="none"/>
+            <text x="196" y="22" font-family="Caveat, cursive" font-size="17" fill="#e8c47a" opacity="0.6">after blocking →</text>
+            <path d="M0 70 Q30 68 60 65 Q90 62 120 58 Q150 54 180 48 Q210 40 240 32 Q270 22 300 14 Q330 8 360 4" stroke="rgba(232,196,122,0.5)" stroke-width="2" fill="none"/>
+          </svg>
+          <p>illustrative attention depth over time</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <svg class="wavy-divider" viewBox="0 0 1440 50" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0,35 Q360,0 720,35 Q1080,70 1440,35 L1440,50 L0,50Z" fill="rgba(0,0,0,0.12)"/>
+  </svg>
+
+
+  <!-- ═══════════════════════════════════════════
+       THE ALTERNATIVE SECTION
+       Better ways to spend your reclaimed time
+  ════════════════════════════════════════════ -->
+  <section id="alternative" aria-label="Better alternatives">
+    <div class="alternative-intro">
+      <div class="section-label">replace the habit</div>
+      <h2>The <em>Alternative</em></h2>
+      <p class="reveal">You've reclaimed your attention. Now fill that space with something intentional. These apps deliver knowledge in bite-sized formats — without the endless scroll trap.</p>
+    </div>
+
+    <div class="apps-grid">
+
+      <!-- Deepstash -->
+      <div class="app-card reveal">
+        <div class="favorite-badge">My Favorite</div>
+        <div class="app-card-header">
+          <img src="https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/07/0b/eb/070beb06-9f33-400c-60ac-68c29bcfbf18/AppIcon-0-0-1x_U007epad-0-11-0-sRGB-85-220.png/400x400ia-75.webp" alt="Deepstash icon" class="app-icon-large">
+          <div>
+            <h3 class="app-title">Deepstash</h3>
+            <p class="app-tagline">Ideas worth keeping</p>
+          </div>
+        </div>
+        <p class="app-description">Curated insights from books, articles, and podcasts — delivered in 2-minute reads. Think of it as the anti-TikTok: every card teaches you something real.</p>
+        <div class="testimonial-box">
+          I've been using Deepstash as my go-to alternative to doomscrolling. It's taught me countless ideas from great books I'd never have time to read. Genuinely life-changing.
+        </div>
+        <div class="app-links">
+          <a href="https://apps.apple.com/us/app/deepstash-smarter-every-day/id1445023295" target="_blank" rel="noopener" class="app-link">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+            iOS
+          </a>
+          <a href="https://play.google.com/store/apps/details?id=com.deepstash&hl=en_IN" target="_blank" rel="noopener" class="app-link">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.523 15.34c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1m-11.046 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1m11.4-6.57l2-3.46-1.73-1-2.05 3.55A9.3 9.3 0 0 0 12 7c-1.24 0-2.41.27-3.45.75L6.5 4.19 4.77 5.19l2.27 3.46C5.38 9.84 4.5 11.61 4.5 13.5h15c0-1.89-.88-3.66-2.27-4.83"/></svg>
+            Android
+          </a>
+        </div>
+      </div>
+
+      <!-- Pocket -->
+      <div class="app-card reveal">
+        <div class="app-card-header">
+          <img src="https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/ec/72/6f/ec726fb2-6e3d-013e-76ce-539fe87c0ef2/AppIcon-0-1x_U007ephone-0-1-85-220-0.png/400x400ia-75.webp" alt="Pocket icon" class="app-icon-large">
+          <div>
+            <h3 class="app-title">CloseReels</h3>
+            <p class="app-tagline">Reduce Scrolling</p>
+          </div>
+        </div>
+        <p class="app-description">CloseReels disrupts your scrolling habit without blindly blocking apps. But CloseReels is only for those who value their time. Now, you can stay realized while scrolling.</p>
+        <div class="app-links">
+          <a href="https://apps.apple.com/us/app/closereels-reduce-scrolling/id6739947824" target="_blank" rel="noopener" class="app-link">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+            iOS
+          </a>
+          <a href="https://play.google.com/store/apps/details?id=com.headway.books" target="_blank" rel="noopener" class="app-link">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.523 15.34c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1m-11.046 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1m11.4-6.57l2-3.46-1.73-1-2.05 3.55A9.3 9.3 0 0 0 12 7c-1.24 0-2.41.27-3.45.75L6.5 4.19 4.77 5.19l2.27 3.46C5.38 9.84 4.5 11.61 4.5 13.5h15c0-1.89-.88-3.66-2.27-4.83"/></svg>
+            Android (alt)
+          </a>
+        </div>
+      </div>
+
+      <!-- Imprint -->
+      <div class="app-card reveal">
+        <div class="app-card-header">
+          <img src="https://is1-ssl.mzstatic.com/image/thumb/PurpleSource221/v4/39/69/b3/3969b3f4-61ad-0fc2-1547-4690eed91b59/Placeholder.mill/400x400bb-75.webp" alt="Imprint icon" class="app-icon-large">
+          <div>
+            <h3 class="app-title">Imprint</h3>
+            <p class="app-tagline">Learn visually in minutes</p>
+          </div>
+        </div>
+        <p class="app-description">Big ideas from the world's best books — explained through stunning visuals. Each lesson takes under 5 minutes. It's like having a personal tutor in your pocket.</p>
+        <div class="app-links">
+          <a href="https://apps.apple.com/us/app/imprint-visual-micro-learning/id1482780647" target="_blank" rel="noopener" class="app-link">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+            iOS
+          </a>
+        </div>
+      </div>
+
+    </div>
+
+    <p class="reveal" style="text-align:center; margin-top:3rem; font-size:0.95rem; color:rgba(245,233,208,0.5); font-style:italic;">
+      The goal isn't to avoid all screens — it's to make them work <em>for</em> you, not <em>against</em> you.
+    </p>
+
+  </section>
+
+
+  <svg class="wavy-divider" viewBox="0 0 1440 50" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0,35 Q360,0 720,35 Q1080,70 1440,35 L1440,50 L0,50Z" fill="rgba(0,0,0,0.12)"/>
+  </svg>
+
+
+  <!-- ═══════════════════════════════════════════
+       ABOUT SECTION
+       ─────────────────────────────────────────
+       PROFILE PHOTO:
+         1. Drop your photo into: images/about/
+            (any filename, e.g. profile.jpg)
+         2. Find .avatar-img below
+         3. Replace the ◎ character with:
+            <img src="images/about/profile.jpg" alt="Your Name">
+         4. Save — the image fills the circle automatically
+
+       OTHER EDITS: name, handle, bio, social hrefs
+  ════════════════════════════════════════════ -->
+  <section id="about" aria-label="About">
+    <div class="about-inner">
+      <div class="section-label" style="justify-content:center;">the person behind this</div>
+
+      <div class="avatar-wrap">
+        <div class="avatar-ring" aria-hidden="true"></div>
+        <div class="avatar-img">
+          <img src="https://ik.imagekit.io/attentionaid/Profile%20Picture/avatar.jpg?updatedAt=1771746912803" alt="Profile picture">
+        </div>
+      </div>
+
+      <!-- ↓ EDIT NAME & HANDLE ↓ -->
+      <div class="about-name">Aditya</div>
+      <div class="about-handle">@totaloverdose</div>
+
+      <!-- ↓ EDIT BIO ↓ -->
+      <p class="about-bio">
+        Two years into zero social media—zilch, not a single minute—and I've never felt freer. No pressure to post, no algorithmic hooks dictating my thoughts. My content consumption has shifted from fleeting scrolls to deep, meaningful dives: reading comprehension has skyrocketed, and I've reclaimed true agency over my mind. Ditch the emotionally engineered addiction—it's harmful and designed to keep you hooked. Try it; real freedom awaits.</p>
+      <p class="about-bio" style="font-size:0.9rem; color:rgba(245,233,208,0.42);">
+        I write about philosophy, product, and building systems that let you do your best work. No algorithms, simple human content. 
+      </p>
+
+      <!-- ↓ EDIT SOCIAL hrefs ↓ -->
+      <div class="social-links">
+        <a href="https://www.linkedin.com/in/rakesh-aditya-194795181/" 
+          class="social-link" 
+          target="_blank" 
+          rel="noopener noreferrer">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M20.45 20.45h-3.37v-5.62c0-1.32-.02-3.03-1.85-3.03-1.85 0-2.13 1.45-2.13 2.95v5.7H9.2V9.88h3.24v1.5h.04c.45-.84 1.55-1.73 3.19-1.73 3.41 0 4.04 2.24 4.04 5.16v5.99zM6.3 7.83a1.84 1.84 0 0 1-1.82-1.84 1.84 1.84 0 1 1 3.64 0 1.84 1.84 0 0 1-1.82 1.84M7.5 20.45H4.18V9.88h3.32z"/>
+          </svg>
+          LinkedIn
+        </a>
+        <a href="#" class="social-link">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 7h-4V5c0-1.1-.9-2-2-2h-4c-1.1 0-2 .9-2 2v2H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zm-6 0h-4V5h4v2z"/></svg>
+          Portfolio
+        </a>
+        <a href="https://www.quora.com/profile/Rakesh-Aditya-11" class="social-link" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; text-decoration: none; gap: 5px;">
+          <img src="https://cdn.simpleicons.org/quora/B92B27" width="13" height="13" alt="Quora Logo">
+            Quora
+        </a>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════
+       FOOTER
+       Layout: left copyright | center doodle eye | right tagline
+  ════════════════════════════════════════════ -->
+  <footer>
+
+    <!-- Left: copyright -->
+    <div class="footer-left">
+      © 2025 AttentionAid · <a href="https://attentionaid.space">attentionaid.space</a>
+    </div>
+
+    <!-- Center: small embedded doodle eye ─────────────────────
+         A compact, stylised eye built entirely in inline SVG.
+         Decorative only. Gently blinks on hover.
+    ──────────────────────────────────────────────────────── -->
+    <div class="footer-eye-wrap" aria-hidden="true">
+      <svg width="56" height="42" viewBox="0 0 56 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Eyelid outer shape -->
+        <path d="M4 21 Q14 5 28 4 Q42 3 52 21 Q42 38 28 38 Q14 37 4 21Z"
+              fill="rgba(107,37,13,0.5)" stroke="rgba(245,233,208,0.45)" stroke-width="1.2"/>
+        <!-- Eyelid crease -->
+        <path d="M8 16 Q18 9 28 9 Q38 9 48 16"
+              fill="none" stroke="rgba(245,233,208,0.15)" stroke-width="0.8"/>
+        <!-- Iris -->
+        <circle cx="28" cy="21" r="11" fill="rgba(74,24,8,0.9)" stroke="rgba(245,233,208,0.4)" stroke-width="1"/>
+        <!-- Iris colour wash -->
+        <circle cx="28" cy="21" r="11" fill="rgba(180,90,30,0.35)"/>
+        <!-- Pupil -->
+        <circle cx="28" cy="21" r="6"  fill="#0d0604"/>
+        <!-- Reflections -->
+        <circle cx="25" cy="18.5" r="2.2" fill="rgba(245,233,208,0.85)"/>
+        <circle cx="31" cy="23"   r="1"   fill="rgba(245,233,208,0.35)"/>
+        <!-- Limbal ring -->
+        <circle cx="28" cy="21" r="11" fill="none" stroke="#1a0905" stroke-width="2"/>
+        <!-- Upper lashes -->
+        <path d="M13 12 Q11 7 10 4"  stroke="rgba(245,233,208,0.55)" stroke-width="1.1" stroke-linecap="round"/>
+        <path d="M20 8 Q19.5 3 20 1" stroke="rgba(245,233,208,0.55)" stroke-width="1.1" stroke-linecap="round"/>
+        <path d="M28 7 Q28 2 28 0"   stroke="rgba(245,233,208,0.55)" stroke-width="1.1" stroke-linecap="round"/>
+        <path d="M36 8 Q36.5 3 36 1" stroke="rgba(245,233,208,0.55)" stroke-width="1.1" stroke-linecap="round"/>
+        <path d="M43 12 Q45 7 46 4"  stroke="rgba(245,233,208,0.55)" stroke-width="1.1" stroke-linecap="round"/>
+        <!-- Lower lashes -->
+        <path d="M16 30 Q14 34 13 37" stroke="rgba(245,233,208,0.3)" stroke-width="0.9" stroke-linecap="round"/>
+        <path d="M28 35 Q28 39 28 41" stroke="rgba(245,233,208,0.3)" stroke-width="0.9" stroke-linecap="round"/>
+        <path d="M40 30 Q42 34 43 37" stroke="rgba(245,233,208,0.3)" stroke-width="0.9" stroke-linecap="round"/>
+        <!-- Doodle accent squiggles beside eye -->
+        <path d="M1 18 Q-1 14 1 11"  stroke="rgba(212,132,59,0.4)" stroke-width="1" stroke-linecap="round" fill="none"/>
+        <path d="M55 24 Q57 20 55 17" stroke="rgba(212,132,59,0.4)" stroke-width="1" stroke-linecap="round" fill="none"/>
+      </svg>
+      <span class="footer-eye-label">stay focused</span>
+    </div>
+
+    <!-- Right: tagline -->
+    <div class="footer-right">
+      made with <span class="footer-heart">♥</span> and no algorithm
+    </div>
+
+  </footer>
+
+
+  <!-- ═══════════════════════════════════════════
+       JAVASCRIPT
+  ════════════════════════════════════════════ -->
+  <script>
+
+    /* ── 1. Custom Cursor (desktop only) ────────
+       dot  → snaps instantly to mouse
+       ring → lerps for a trailing effect
+    ─────────────────────────────────────────── */
+    if (window.matchMedia('(hover: hover)').matches) {
+      const dot  = document.getElementById('cursorDot');
+      const ring = document.getElementById('cursorRing');
+      let mx = 0, my = 0, rx = 0, ry = 0;
+
+      document.addEventListener('mousemove', e => {
+        mx = e.clientX; my = e.clientY;
+        dot.style.left = mx + 'px'; dot.style.top = my + 'px';
+      });
+
+      (function loop() {
+        rx += (mx - rx) * 0.12;
+        ry += (my - ry) * 0.12;
+        ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+        requestAnimationFrame(loop);
+      })();
+    }
+
+
+    /* ── 2. Mobile Hamburger ────────────────────
+       Toggles .open on #navDrawer.
+       Animates bars → X icon.
+    ─────────────────────────────────────────── */
+    const hamburger = document.getElementById('hamburger');
+    const navDrawer = document.getElementById('navDrawer');
+
+    hamburger.addEventListener('click', () => {
+      const isOpen = navDrawer.classList.toggle('open');
+      hamburger.setAttribute('aria-expanded', isOpen);
+      navDrawer.setAttribute('aria-hidden', !isOpen);
+      const b = hamburger.querySelectorAll('span');
+      if (isOpen) {
+        b[0].style.transform = 'translateY(6.5px) rotate(45deg)';
+        b[1].style.opacity   = '0';
+        b[2].style.transform = 'translateY(-6.5px) rotate(-45deg)';
+      } else {
+        b[0].style.transform = b[1].style.opacity = b[2].style.transform = '';
+      }
+    });
+
+    function closeDrawer() {
+      navDrawer.classList.remove('open');
+      navDrawer.setAttribute('aria-hidden', 'true');
+      hamburger.setAttribute('aria-expanded', 'false');
+      hamburger.querySelectorAll('span').forEach(b => { b.style.transform = ''; b.style.opacity = ''; });
+    }
+
+
+    /* ── 3. Tab Switching ───────────────────────
+       data-tab on .tab-btn → matches id="panel-{value}"
+    ─────────────────────────────────────────── */
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
+        document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+        observeReveals(); // trigger reveals in newly visible panel
+      });
+    });
+
+
+    /* ── 4. Scroll Reveal ───────────────────────
+       .reveal → fades up when it enters viewport
+    ─────────────────────────────────────────── */
+    const revObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) { e.target.classList.add('visible'); revObs.unobserve(e.target); }
+      });
+    }, { threshold: 0.1 });
+
+    function observeReveals() {
+      document.querySelectorAll('.reveal:not(.visible)').forEach(el => revObs.observe(el));
+    }
+    observeReveals();
+
+
+    /* ── 5. Eye Pupil Cursor Tracking ───────────
+       Only on pointer devices. Clamped ±14/10px.
+    ─────────────────────────────────────────── */
+    const heroEye = document.querySelector('.hero-eye');
+    if (heroEye && window.matchMedia('(hover: hover)').matches) {
+      const pupil = heroEye.querySelector('.eye-pupil');
+      document.addEventListener('mousemove', e => {
+        const r = heroEye.getBoundingClientRect();
+        const dx = Math.max(-14, Math.min(14, (e.clientX - (r.left + r.width/2))  / window.innerWidth  * 28));
+        const dy = Math.max(-10, Math.min(10, (e.clientY - (r.top  + r.height/2)) / window.innerHeight * 20));
+        pupil.style.transform = `translate(${dx}px,${dy}px)`;
+      });
+    }
+
+
+    /* ── 6. Step Image Auto-Show ────────────────
+       If a .step-img-wrap has a non-empty src on
+       its <img>, auto-apply the has-image class
+       so the image slot appears without needing
+       to manually add the class in HTML.
+    ─────────────────────────────────────────── */
+    document.querySelectorAll('.step-img-wrap').forEach(wrap => {
+      const img = wrap.querySelector('img');
+      if (img && img.getAttribute('src') && img.getAttribute('src').trim() !== '') {
+        wrap.classList.add('has-image');
+      }
+    });
+
+
+    /* ── 7. Animated Grain Canvas ───────────────
+       Opacity 0.028 = 70% of original 0.04
+    ─────────────────────────────────────────── */
+    const gc = document.createElement('canvas');
+    gc.width = gc.height = 256;
+    Object.assign(gc.style, {
+      position: 'fixed', inset: '0',
+      width: '100%', height: '100%',
+      pointerEvents: 'none', zIndex: '998',
+      opacity: '0.028', mixBlendMode: 'overlay'
+    });
+    const gx = gc.getContext('2d');
+    function drawGrain() {
+      const img = gx.createImageData(256, 256);
+      for (let i = 0; i < img.data.length; i += 4) {
+        const v = (Math.random() * 255) | 0;
+        img.data[i] = img.data[i+1] = img.data[i+2] = v; img.data[i+3] = 255;
+      }
+      gx.putImageData(img, 0, 0);
+      gc.style.backgroundImage = `url(${gc.toDataURL()})`;
+    }
+    drawGrain(); document.body.appendChild(gc);
+    setInterval(drawGrain, 100);
+
+
+    /* ── 8. GIF Play Button ─────────────────────
+       Click the GIF overlay to play the animation.
+       Uses ImageKit's transformation to show static first frame initially.
+    ─────────────────────────────────────────── */
+    const gifOverlay = document.getElementById('gifOverlay');
+    if (gifOverlay) {
+      const gif = document.getElementById('demoGif');
+      const gifSrc = gif.getAttribute('data-gif-src');
+      
+      // On page load, show static first frame
+      // ImageKit's fo-auto extracts first frame as static image
+      gif.src = gif.src; // Keep the fo-auto URL
+      
+      gifOverlay.addEventListener('click', function() {
+        // Only play once clicked
+        if (!this.classList.contains('playing')) {
+          this.classList.add('playing');
+          // Load the actual animated GIF
+          gif.src = gifSrc;
+        }
+      });
+    }
+
+
+    /* ── 9. Copy Code to Clipboard ──────────────
+       Copy button for code containers
+    ─────────────────────────────────────────── */
+    window.copyCode = function(button, containerId) {
+      const container = document.getElementById(containerId);
+      const code = container.textContent;
+      
+      navigator.clipboard.writeText(code).then(() => {
+        const originalHTML = button.innerHTML;
+        button.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+          Copied!
+        `;
+        button.classList.add('copied');
+        
+        setTimeout(() => {
+          button.innerHTML = originalHTML;
+          button.classList.remove('copied');
+        }, 2000);
+      }).catch(err => {
+        console.error('Failed to copy:', err);
+        alert('Failed to copy code. Please select and copy manually.');
+      });
+    };
+
+  </script>
+</body>
+</html>
