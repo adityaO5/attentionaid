@@ -1007,6 +1007,139 @@
 
 
     /* ═══════════════════════════════════════════
+       RESEARCH SECTION
+    ════════════════════════════════════════════ */
+    #research {
+      padding: 5rem 0;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .research-intro {
+      text-align: center;
+      max-width: 800px;
+      margin: 0 auto 4rem;
+    }
+    .research-intro p {
+      font-size: 1.05rem;
+      line-height: 1.8;
+      color: rgba(245, 233, 208, 0.7);
+      margin-top: 1rem;
+    }
+    .research-papers {
+      display: flex;
+      flex-direction: column;
+      gap: 4rem;
+    }
+    .research-paper {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: start;
+      background: rgba(0, 0, 0, 0.15);
+      border: 1px solid rgba(245, 233, 208, 0.1);
+      border-radius: 12px;
+      padding: 3rem;
+      transition: all 0.3s;
+    }
+    .research-paper:hover {
+      border-color: rgba(245, 233, 208, 0.25);
+      transform: translateY(-2px);
+    }
+    .research-summary h3 {
+      font-family: 'Fraunces', serif;
+      font-size: 1.6rem;
+      line-height: 1.3;
+      color: var(--cream);
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+    .research-authors {
+      font-size: 0.85rem;
+      color: var(--amber);
+      font-style: italic;
+      margin-bottom: 0.5rem;
+    }
+    .research-meta {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      font-size: 0.8rem;
+      color: rgba(245, 233, 208, 0.5);
+      margin-bottom: 1.5rem;
+    }
+    .research-meta span {
+      padding: 0.3rem 0.8rem;
+      background: rgba(245, 233, 208, 0.08);
+      border-radius: 4px;
+    }
+    .research-description {
+      font-size: 0.95rem;
+      line-height: 1.8;
+      color: rgba(245, 233, 208, 0.7);
+      margin-bottom: 1.5rem;
+    }
+    .research-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--amber);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.9rem;
+      padding: 0.6rem 1.2rem;
+      border: 1px solid rgba(212, 132, 59, 0.3);
+      border-radius: 6px;
+      transition: all 0.2s;
+      width: fit-content;
+    }
+    .research-link:hover {
+      background: rgba(212, 132, 59, 0.1);
+      border-color: var(--amber);
+      transform: translateY(-1px);
+    }
+    .research-link svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+    .research-preview {
+      position: relative;
+      background: rgba(245, 233, 208, 0.05);
+      border-radius: 8px;
+      padding: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .research-preview img {
+      width: 100%;
+      height: auto;
+      border-radius: 4px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+    @media (max-width: 1024px) {
+      .research-paper {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+      }
+      .research-preview {
+        order: -1;
+      }
+    }
+    @media (max-width: 768px) {
+      #research {
+        padding: 3rem 0;
+      }
+      .research-paper {
+        padding: 2rem;
+      }
+      .research-summary h3 {
+        font-size: 1.3rem;
+      }
+    }
+
+
+    /* ═══════════════════════════════════════════
        ABOUT SECTION
     ════════════════════════════════════════════ */
     #about { background: rgba(0, 0, 0, 0.12); }
@@ -1153,6 +1286,7 @@
       <li><a href="#guide">Guide</a></li>
       <li><a href="#why">Why It Matters</a></li>
       <li><a href="#alternative">The Alternative</a></li>
+      <li><a href="#research">Research</a></li>
       <li><a href="#about">About</a></li>
     </ul>
     <button class="nav-hamburger" id="hamburger" aria-label="Toggle menu" aria-expanded="false">
@@ -1165,6 +1299,7 @@
       <li><a href="#guide"  onclick="closeDrawer()">Guide</a></li>
       <li><a href="#why"   onclick="closeDrawer()">Why It Matters</a></li>
       <li><a href="#alternative" onclick="closeDrawer()">The Alternative</a></li>
+      <li><a href="#research" onclick="closeDrawer()">Research</a></li>
       <li><a href="#about" onclick="closeDrawer()">About</a></li>
     </ul>
   </div>
@@ -1948,6 +2083,84 @@
 
     <p class="reveal" style="text-align:center; margin-top:3rem; font-size:0.95rem; color:rgba(245,233,208,0.5); font-style:italic;">
       The goal isn't to avoid all screens — it's to make them work <em>for</em> you, not <em>against</em> you.
+    </p>
+
+  </section>
+
+
+  <svg class="wavy-divider" viewBox="0 0 1440 50" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0,35 Q360,0 720,35 Q1080,70 1440,35 L1440,50 L0,50Z" fill="rgba(0,0,0,0.12)"/>
+  </svg>
+
+
+  <!-- ═══════════════════════════════════════════
+       RESEARCH SECTION
+  ════════════════════════════════════════════ -->
+  <section id="research" aria-label="What Research Says">
+    <div class="research-intro">
+      <div class="section-label">the science behind it</div>
+      <h2>What <em>Research</em> Says</h2>
+      <p class="reveal">These aren't just theories — academic research shows how recommendation algorithms are engineered to hijack your attention. Here's what the science reveals about short-form video addiction.</p>
+    </div>
+
+    <div class="research-papers">
+      
+      <!-- Paper 1: ByteDance Monolith -->
+      <div class="research-paper reveal">
+        <div class="research-summary">
+          <h3>ByteDance's TikTok Recommendation Engine</h3>
+          <p class="research-authors">ByteDance Engineering Team</p>
+          <div class="research-meta">
+            <span>ByteDance Inc.</span>
+            <span>ACM RecSys 2022</span>
+            <span>Production System</span>
+          </div>
+          <p class="research-description">
+            This paper reveals the internal architecture of <strong>Monolith</strong> — ByteDance's real-time recommendation system powering TikTok. The system updates its understanding of your preferences <strong>every minute</strong>, creating an unprecedented feedback loop. Traditional batch training was abandoned because it's too slow for short-video platforms. The algorithm processes millions of users simultaneously, using "collisionless embedding tables" to capture unique patterns for every user and video.
+          </p>
+          <p class="research-description">
+            <strong>Why it matters:</strong> Your every swipe trains the algorithm in real-time. The system is designed specifically for time-sensitive customer feedback — optimizing not for your wellbeing, but for maximum engagement.
+          </p>
+          <a href="https://arxiv.org/pdf/2209.07663" target="_blank" rel="noopener" class="research-link">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2l5 5h-5V4zM8 18v-2h8v2H8zm0-4v-2h8v2H8zm0-4V8h4v2H8z"/></svg>
+            Read Full Paper
+          </a>
+        </div>
+        <div class="research-preview">
+          <img src="https://ik.imagekit.io/attentionaid/Research%20section/Monolith_page-0001.jpg" alt="ByteDance Monolith recommendation system architecture" loading="lazy">
+        </div>
+      </div>
+
+      <!-- Paper 2: YouTube Shorts Echo Chambers -->
+      <div class="research-paper reveal">
+        <div class="research-summary">
+          <h3>YouTube Shorts: Echo Chambers and Algorithmic Bias</h3>
+          <p class="research-authors">Selimhan Dagtas, Mert Can Cakmak, Nitin Agarwal</p>
+          <div class="research-meta">
+            <span>University of Arkansas</span>
+            <span>arXiv 2025</span>
+            <span>Comparative Study</span>
+          </div>
+          <p class="research-description">
+            Researchers analyzed YouTube's recommendation algorithms for both Shorts and long-form videos. They discovered that <strong>Shorts push users into echo chambers faster than traditional videos</strong>, with algorithms prioritizing engagement over content diversity. Short-form videos show a more immediate shift toward engaging but less diverse content compared to long-form videos.
+          </p>
+          <p class="research-description">
+            <strong>Key finding:</strong> The algorithm optimizes for watch-time above all else, sacrificing content quality and creating stronger filter bubbles. Political content in Shorts demonstrates measurable algorithmic bias, shaping narratives and amplifying specific viewpoints.
+          </p>
+          <a href="https://arxiv.org/abs/2507.21467" target="_blank" rel="noopener" class="research-link">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2l5 5h-5V4zM8 18v-2h8v2H8zm0-4v-2h8v2H8zm0-4V8h4v2H8z"/></svg>
+            Read Full Paper
+          </a>
+        </div>
+        <div class="research-preview">
+          <img src="https://ik.imagekit.io/attentionaid/Research%20section/Efficient%20data%20retriveal_page-0010.jpg" alt="YouTube Shorts algorithm bias analysis" loading="lazy">
+        </div>
+      </div>
+
+    </div>
+
+    <p class="reveal" style="text-align:center; margin-top:4rem; font-size:1rem; color:rgba(245,233,208,0.6); max-width:700px; margin-left:auto; margin-right:auto; line-height:1.8;">
+      <strong>The takeaway?</strong> These algorithms are engineered by some of the world's smartest engineers to be maximally addictive. You're not weak — you're up against billion-dollar AI systems. That's why you need tools, not willpower.
     </p>
 
   </section>
